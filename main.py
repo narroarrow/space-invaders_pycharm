@@ -1,4 +1,5 @@
 import pygame
+import math
 
 # Initializing the pygame
 import random
@@ -20,11 +21,19 @@ playerY = 480
 playerX_change = 0
 
 # Aliens Position Variables
-alienImg = pygame.image.load('alien.png')
-alienX = random.randint(0, 800)
-alienY = random.randint(50, 150)
-alienX_change = 0.2
-alienY_change = 40
+alienImg = []
+alienX = []
+alienY = []
+alienX_change = []
+alienY_change = []
+numberOfAliens = 10
+
+for i in range(numberOfAliens):
+    alienImg.append(pygame.image.load('alien.png'))
+    alienX.append(random.randint(0, 735))
+    alienY.append(random.randint(50, 150))
+    alienX_change.append(0.2)
+    alienY_change.append(40)
 
 # Bullet Variables
 bulletImg = pygame.image.load('bullet.png')
@@ -33,6 +42,22 @@ bulletY = 480
 bulletY_change = 0.75
 bullet_state = "ready"  # ready state means bullet ready to shoot
 
+# Score Variables
+scoreValue = 0
+font = pygame.font.Font('PublicPixel-0W6DP.ttf', 16)
+textX = 10
+textY = 10
+
+# Game Over Variables
+gameOverFont = pygame.font.Font('PublicPixel-0W6DP.ttf', 64)
+
+def gameOverText():
+    gameOverText = gameOverFont.render("GAME OVER", True, (255, 255, 255))
+    screen.blit(gameOverText, (150, 250))
+
+def showScore(positionX, positionY):
+    score = font.render("Score: " + str(scoreValue), True, (255, 255, 255))
+    screen.blit(score, (positionX, positionY))
 
 # Player function
 def player(positionX, positionY):
@@ -40,8 +65,8 @@ def player(positionX, positionY):
 
 
 # Alien function
-def alien(positionX, positionY):
-    screen.blit(alienImg, (positionX, positionY))
+def alien(positionX, positionY, i):
+    screen.blit(alienImg[i], (positionX, positionY))
 
 
 # Bullet function
@@ -51,12 +76,21 @@ def fire_bullet(positionX, positionY):
     screen.blit(bulletImg, (positionX + 16, positionY + 5))
 
 
+def isCollision(alienX, alienY, bulletX, bulletY):
+    distance = math.sqrt(math.pow(alienX - bulletX, 2) + math.pow(alienY - bulletY, 2))
+
+    if distance < 27:
+        return True
+    else:
+        return False
+
+
 # Game Loop
 close_program = True
 while close_program:
 
     # Background Color - RGB
-    screen.fill((27, 29, 90))
+    screen.fill((173, 216, 230))
 
     # Loop for events occurring in game
     for event in pygame.event.get():
@@ -88,14 +122,36 @@ while close_program:
     elif playerX >= 736:
         playerX = 736
 
-    # Alien Boundaries and Movement
-    alienX += alienX_change
-    if alienX <= 0:
-        alienX_change = 0.2
-        alienY += alienY_change
-    elif alienX >= 736:
-        alienX_change = -0.2
-        alienY += alienY_change
+    # Alien Boundaries and Movement. Bullet Collision. Game Over
+    for i in range(numberOfAliens):
+
+        # Game Over
+
+        if alienY[i] > 450 or (alienY[i] == playerY and alienX[i] == playerX):
+            for j in range(numberOfAliens):
+                alienY[j] = 2000
+            gameOverText()
+            break
+
+        # Alien Movement
+        alienX[i] += alienX_change[i]
+        if alienX[i] <= 0:
+            alienX_change[i] = 0.2
+            alienY[i] += alienY_change[i]
+        elif alienX[i] >= 736:
+            alienX_change[i] = -0.2
+            alienY[i] += alienY_change[i]
+
+        # Collision
+        collision = isCollision(alienX[i], alienY[i], bulletX, bulletY)
+        if collision:
+            bulletY = 480
+            bullet_state = "ready"
+            scoreValue += 100
+            alienX[i] = random.randint(0, 735)
+            alienY[i] = random.randint(50, 150)
+
+        alien(alienX[i], alienY[i], i)
 
     # Bullet Movement
     if bulletY <= 0:
@@ -107,7 +163,7 @@ while close_program:
         bulletY -= bulletY_change
 
     player(playerX, playerY)
-    alien(alienX, alienY)
+    showScore(textX, textY)
 
     # Updating the screen to monitor events
     pygame.display.update()
