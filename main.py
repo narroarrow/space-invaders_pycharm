@@ -51,13 +51,16 @@ textY = 10
 # Game Over Variables
 gameOverFont = pygame.font.Font('PublicPixel-0W6DP.ttf', 64)
 
+
 def gameOverText():
     gameOverText = gameOverFont.render("GAME OVER", True, (255, 255, 255))
     screen.blit(gameOverText, (150, 250))
 
+
 def showScore(positionX, positionY):
     score = font.render("Score: " + str(scoreValue), True, (255, 255, 255))
     screen.blit(score, (positionX, positionY))
+
 
 # Player function
 def player(positionX, positionY):
